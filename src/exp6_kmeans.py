@@ -15,8 +15,6 @@ All figures are saved into outputs/exp6/.
 from pathlib import Path
 from dataclasses import dataclass
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
@@ -206,8 +204,9 @@ def kmeans_3d_process_animation(data: np.ndarray, result: KMeansResult) -> None:
         print(f"[exp6] saved {gif_path}")
     except Exception as exc:
         print(f"[exp6] GIF save failed: {exc!r}; first frame already saved.")
-    finally:
-        plt.close(fig)
+
+    plt.show()
+    plt.close(fig)
 
 
 def main() -> None:
