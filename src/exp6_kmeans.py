@@ -1,24 +1,9 @@
-"""
-exp6_kmeans.py
-
-Python replacement for Matlab Experiment 6:
-- simple 2D K-means
-- 3D K-means process with intermediate results
-- optional GIF animation of clustering process
-
-Run directly:
-    python src/exp6_kmeans.py
-
-All figures are saved into outputs/exp6/.
-"""
-
 from pathlib import Path
 from dataclasses import dataclass
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
-
 
 OUT_DIR = Path(__file__).resolve().parents[1] / "outputs" / "exp6"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -40,19 +25,12 @@ def save_fig(fig: plt.Figure, filename: str) -> None:
 
 
 def kmeans(data: np.ndarray, k: int, seed: int = 7, max_iter: int = 100, tol: float = 1e-3) -> KMeansResult:
-    """
-    Minimal K-means implementation, using only NumPy.
-    data: shape (sample_count, feature_count)
-    k: number of clusters
-    """
     rng = np.random.default_rng(seed)
     n_samples = data.shape[0]
-    initial_idx = rng.choice(n_samples, size=k, replace=False)
-    centers = data[initial_idx].copy()
+    centers = data[rng.choice(n_samples, size=k, replace=False)].copy()
     history = []
 
     for iteration in range(max_iter):
-        # distance matrix: shape (sample_count, k)
         distances = np.linalg.norm(data[:, None, :] - centers[None, :, :], axis=2)
         labels = np.argmin(distances, axis=1)
 
@@ -78,13 +56,11 @@ def kmeans(data: np.ndarray, k: int, seed: int = 7, max_iter: int = 100, tol: fl
 
 
 def simple_2d_kmeans_demo() -> None:
-    """Replacement for the simple Matlab 2D K-means example."""
     rng = np.random.default_rng(1)
     x1 = rng.random(100) * 5
     y1 = rng.random(100) * 5
     x2 = rng.random(100) * 5 + 3
     y2 = rng.random(100) * 5 + 3
-
     data = np.column_stack([np.concatenate([x1, x2]), np.concatenate([y1, y2])])
     result = kmeans(data, k=2, seed=10)
 
@@ -93,77 +69,59 @@ def simple_2d_kmeans_demo() -> None:
         points = data[result.labels == cluster_id]
         ax.scatter(points[:, 0], points[:, 1], marker="*", label=f"cluster {cluster_id + 1}")
     ax.scatter(result.centers[:, 0], result.centers[:, 1], marker="o", s=160, edgecolors="black", label="centers")
-    ax.set_title("Simple 2D K-means")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    ax.set(title="Simple 2D K-means", xlabel="x", ylabel="y")
     ax.grid(True)
     ax.legend()
-
     save_fig(fig, "01_simple_2d_kmeans.png")
 
 
 def generate_3d_cluster_data(seed: int = 3) -> np.ndarray:
-    """Replacement for Matlab mvnrnd-based 3D Gaussian data generation."""
     rng = np.random.default_rng(seed)
 
     mu1 = np.array([0, 0, 0])
-    cov1 = np.diag([0.3, 0.35, 0.3])
+    cov1 = np.diag([0.8, 0.9, 0.8])
     data1 = rng.multivariate_normal(mu1, cov1, size=100)
 
-    mu2 = np.array([1.25, 1.25, 1.25])
-    cov2 = np.diag([0.3, 0.35, 0.3])
+    mu2 = np.array([0.8, 0.8, 0.8])
+    cov2 = np.diag([0.8, 0.9, 0.8])
     data2 = rng.multivariate_normal(mu2, cov2, size=100)
 
-    mu3 = np.array([-1.25, 1.25, -1.25])
-    cov3 = np.diag([0.3, 0.35, 0.3])
+    mu3 = np.array([-0.8, 0.8, -0.8])
+    cov3 = np.diag([0.8, 0.9, 0.8])
     data3 = rng.multivariate_normal(mu3, cov3, size=100)
 
     return np.vstack([data1, data2, data3])
 
 
 def original_3d_data_demo(data: np.ndarray) -> None:
-    """Plot original 3D data before clustering."""
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111, projection="3d")
     ax.scatter(data[:100, 0], data[:100, 1], data[:100, 2], marker="+", label="group 1")
     ax.scatter(data[100:200, 0], data[100:200, 1], data[100:200, 2], marker="+", label="group 2")
     ax.scatter(data[200:, 0], data[200:, 1], data[200:, 2], marker="+", label="group 3")
-    ax.set_title("Original 3D Gaussian Data")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
+    ax.set(title="Original 3D Gaussian Data", xlabel="x", ylabel="y", zlabel="z")
     ax.legend()
     ax.grid(True)
-
     save_fig(fig, "02_original_3d_data.png")
 
 
 def kmeans_3d_final_demo(data: np.ndarray, result: KMeansResult) -> None:
-    """Plot final 3D K-means result."""
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111, projection="3d")
-
     for cluster_id in range(3):
         points = data[result.labels == cluster_id]
         ax.scatter(points[:, 0], points[:, 1], points[:, 2], marker="*", label=f"cluster {cluster_id + 1}")
-
     centers = result.centers
     ax.scatter(centers[:, 0], centers[:, 1], centers[:, 2], marker="x", s=160, linewidths=3, label="centers")
-    ax.set_title(f"Final 3D K-means Result ({len(result.history)} iterations)")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
+    ax.set(title=f"Final 3D K-means Result ({len(result.history)} iterations)", xlabel="x", ylabel="y", zlabel="z")
     ax.legend()
     ax.grid(True)
-
     save_fig(fig, "03_final_3d_kmeans.png")
 
 
 def kmeans_3d_process_animation(data: np.ndarray, result: KMeansResult) -> None:
-    """Replacement for getframe/addframe-style K-means process recording."""
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111, projection="3d")
-
     xlim = (data[:, 0].min() - 0.5, data[:, 0].max() + 0.5)
     ylim = (data[:, 1].min() - 0.5, data[:, 1].max() + 0.5)
     zlim = (data[:, 2].min() - 0.5, data[:, 2].max() + 0.5)
@@ -198,7 +156,6 @@ def kmeans_3d_process_animation(data: np.ndarray, result: KMeansResult) -> None:
 
     ani = animation.FuncAnimation(fig, update, frames=len(result.history), interval=700, blit=False)
     gif_path = OUT_DIR / "05_kmeans_process.gif"
-
     try:
         ani.save(gif_path, writer=animation.PillowWriter(fps=1))
         print(f"[exp6] saved {gif_path}")
@@ -211,10 +168,9 @@ def kmeans_3d_process_animation(data: np.ndarray, result: KMeansResult) -> None:
 
 def main() -> None:
     simple_2d_kmeans_demo()
-
     data = generate_3d_cluster_data()
     original_3d_data_demo(data)
-    result = kmeans(data, k=3, seed=12)
+    result = kmeans(data, k=3, seed=12, max_iter=50, tol=1e-8)
     kmeans_3d_final_demo(data, result)
     kmeans_3d_process_animation(data, result)
 
