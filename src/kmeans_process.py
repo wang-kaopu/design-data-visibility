@@ -13,12 +13,52 @@ from dataclasses import dataclass
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import animation
+from matplotlib import animation, font_manager
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
 
 OUT_DIR = Path(__file__).resolve().parents[1] / "outputs" / "kmeans_process"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+WATERMARK_TEXT = "3123004758王坤平"
+WATERMARK_FONT_CANDIDATES = [
+    "Microsoft YaHei",
+    "SimHei",
+    "PingFang SC",
+    "Heiti SC",
+    "Songti SC",
+    "Noto Sans CJK SC",
+    "Source Han Sans SC",
+    "WenQuanYi Zen Hei",
+    "Arial Unicode MS",
+]
+
+
+def get_watermark_font() -> font_manager.FontProperties | None:
+    """Pick an available CJK font so the Chinese watermark renders correctly."""
+    available_fonts = {font.name for font in font_manager.fontManager.ttflist}
+    for font_name in WATERMARK_FONT_CANDIDATES:
+        if font_name in available_fonts:
+            return font_manager.FontProperties(family=font_name)
+    return None
+
+
+WATERMARK_FONT = get_watermark_font()
+
+
+def add_watermark(fig: plt.Figure) -> None:
+    """Add a small watermark to the bottom-right corner of a figure."""
+    fig.text(
+        0.985,
+        0.015,
+        WATERMARK_TEXT,
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        color="gray",
+        alpha=0.65,
+        fontproperties=WATERMARK_FONT,
+    )
 
 
 @dataclass
@@ -31,6 +71,7 @@ class KMeansResult:
 def save_fig(fig: plt.Figure, filename: str) -> None:
     path = OUT_DIR / filename
     fig.tight_layout()
+    add_watermark(fig)
     fig.savefig(path, dpi=160)
     plt.close(fig)
     print(f"[kmeans] saved {path}")
@@ -120,6 +161,7 @@ def animate_kmeans_process(data: np.ndarray, result: KMeansResult) -> None:
         return
 
     fig = plt.figure(figsize=(7, 6))
+    add_watermark(fig)
     ax = fig.add_subplot(111, projection="3d")
 
     xlim = (data[:, 0].min() - 0.5, data[:, 0].max() + 0.5)
