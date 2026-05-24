@@ -156,6 +156,24 @@ def plot_final_result(data: np.ndarray, result: KMeansResult) -> None:
     save_fig(fig, "02_final_kmeans_result.png")
 
 
+def plot_center_shift(result: KMeansResult) -> None:
+    """Plot how much the K-means centers move in each iteration."""
+    if not result.history:
+        return
+
+    iterations = [state["iteration"] for state in result.history]
+    shifts = [state["shift"] for state in result.history]
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+    ax.plot(iterations, shifts, marker="o")
+    ax.set_title("Center shift in each K-means iteration")
+    ax.set_xlabel("iteration")
+    ax.set_ylabel("center shift")
+    ax.set_xticks(iterations)
+    ax.grid(True)
+    save_fig(fig, "05_center_shift.png")
+
+
 def animate_kmeans_process(data: np.ndarray, result: KMeansResult) -> None:
     if not result.history:
         return
@@ -214,6 +232,7 @@ def main() -> None:
 
     plot_original_data(data)
     plot_final_result(data, result)
+    plot_center_shift(result)
     animate_kmeans_process(data, result)
 
 
